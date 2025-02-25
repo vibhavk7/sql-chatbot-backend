@@ -1,0 +1,94 @@
+Below is the structure of the tables in the database. It contains the table names and its corresponding columns.
+customers : ["customerNumber", "customerName", "contactLastName", "contactFirstName", "phone", "addressLine1", "addressLine2", "city", "state", "postalCode", "country", "salesRepEmployeeNumber", "creditLimit"]
+employees : ["employeeNumber", "lastName", "firstName", "extension", "email", "officeCode", "reportsTo", "jobTitle"]
+offices : ["officeCode", "city", "phone", "addressLine1", "addressLine2", "state", "country", "postalCode", "territory"]
+orderdetails : ["orderNumber", "productCode", "quantityOrdered", "priceEach", "orderLineNumber"]
+orders : ["orderNumber", "orderDate", "requiredDate", "shippedDate", "status", "comments", "customerNumber"]
+payments : ["customerNumber", "checkNumber", "paymentDate", "amount"]
+products : ["productCode", "productName", "productLine", "productScale", "productVendor", "productDescription", "quantityInStock", "buyPrice", "MSRP"]
+
+Below are the sample questions and their corresponding correct responses that are expected. please refer to this while generating the reponse.  
+
+Q. Visualize the sales for mercedes benz from jan to dec 2003
+{
+"query": "SELECT orders.orderDate, orderdetails.quantityOrdered FROM orders JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber JOIN products ON orderdetails.productCode = products.productCode WHERE LOWER(products.productName) LIKE LOWER("%mercedes%") AND YEAR(orders.orderDate) = 2003 AND MONTH(orders.orderDate) BETWEEN 1 AND 12;",
+"columns":["orderDate","quantityOrdered"],
+"outstr": "Visualizing sales for Mercedes Benz from January to December 2003.",
+"type": "graph", 
+"graph_type": "line", 
+"x": "Month",
+"y": "Sales"
+}
+
+Q. Show me all the employee data
+{
+"query": "SELECT employeeNumber, lastName, firstName, extension, email, officeCode, reportsTo, jobTitle FROM employees;",
+"columns":["employeeNumber", "lastName", "firstName", "extension", "email", "officeCode", "reportsTo", "jobTitle"],
+"outstr": "Following are the employee details.",
+"type": "table"
+}
+
+Q. What is the total revenue generated from san francisco
+{
+"query": "SELECT customers.city, SUM(payments.amount) FROM customers JOIN payments ON customers.customerNumber = payments.customerNumber WHERE LOWER(customers.city) LIKE LOWER("%san francisco%") GROUP BY customers.city;", 
+"columns":["city", "payments"], 
+"outstr": "Total revenue generated from San Francisco",
+"type": "table"
+}
+
+Q. Which office sells the most products
+{
+"query": "SELECT offices.officeCode, offices.city, SUM(orderdetails.quantityOrdered) as total_products_sold FROM offices JOIN employees ON offices.officeCode = employees.officeCode JOIN customers ON employees.employeeNumber = customers.salesRepEmployeeNumber JOIN orders ON customers.customerNumber = orders.customerNumber JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber GROUP BY offices.officeCode, offices.city ORDER BY total_products_sold DESC",
+"columns":["officeCode","city","total_products_sold"],
+"outstr": "The office that sells the most products.",
+"type": "table"
+}
+
+Q. Visualize the sales customer wise
+{
+"query": "SELECT customers.customerName, SUM(orderdetails.quantityOrdered * orderdetails.priceEach) as totalSales FROM customers JOIN orders ON customers.customerNumber = orders.customerNumber JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber GROUP BY customers.customerName",
+"column":["customerName","totalSales"],
+"outstr": "This graph represents the total sales for each customer.", 
+"type": "graph", 
+"graph_type": "column",
+"x": "Customer Name", 
+"y": "Total Sales"
+}
+
+Q. Which is the highest selling product from Madrid for the last quarter of 2004
+{
+"query": "SELECT products.productName, SUM(orderdetails.quantityOrdered) as total_quantity FROM products JOIN orderdetails ON products.productCode = orderdetails.productCode JOIN orders ON orderdetails.orderNumber = orders.orderNumber JOIN customers ON orders.customerNumber = customers.customerNumber WHERE customers.city = "Madrid" AND orders.orderDate BETWEEN "2004-10-01" AND "2004-12-31" GROUP BY products.productName ORDER BY total_quantity DESC LIMIT 1;",
+"columns":["productName","total_quantity"],
+"outstr": "The highest selling product from Madrid for the last quarter of 2004 is",
+"type": "table"
+}
+
+Q. What are the total orders placed in 2003 from CA
+{
+"query": "SELECT orders.orderNumber, orders.orderDate, customers.state FROM orders INNER JOIN customers ON orders.customerNumber = customers.customerNumber WHERE YEAR(orders.orderDate) = 2003 AND customers.state = "CA";",
+"columns":["orderNumber","orderDate","state"],
+"outstr": "Total orders placed in 2003 from CA.",
+"type": "table", 
+}
+
+Q. Represent the sales for each salesperson as a graph
+{
+"query": "SELECT CONCAT(employees.firstName, ' ', employees.lastName) AS salesperson, SUM(orderdetails.quantityOrdered * orderdetails.priceEach) as totalSales FROM employees JOIN customers ON employees.employeeNumber = customers.salesRepEmployeeNumber JOIN orders ON customers.customerNumber = orders.customerNumber JOIN orderdetails ON orders.orderNumber = orderdetails.orderNumber GROUP BY salesperson;",
+"columns": ["salesperson", "totalSales"],
+"outstr": "Visualizing sales salesperson wise.",
+"type": "graph",
+"graph_type": "column",
+"x": "Salesperson",
+"y": "Total Sales"
+}
+
+Q. Visualize the price of the Mercedes Benz over the years
+{
+"query": "SELECT YEAR(orders.orderDate) as year, products.buyPrice FROM products JOIN orderdetails ON products.productCode = orderdetails.productCode JOIN orders ON orderdetails.orderNumber = orders.orderNumber WHERE LOWER(products.productName) LIKE LOWER('%mercedes%') GROUP BY year;",
+"columns": ["year", "buyPrice"],
+"outstr": "Visualizing the price of Mercedes Benz over the years.",
+"type": "graph",
+"graph_type": "line",
+"x": "Years",
+"y": "Cost Price"
+}
